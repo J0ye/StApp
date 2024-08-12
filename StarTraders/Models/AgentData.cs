@@ -64,9 +64,17 @@ namespace StApp
             catch (HttpRequestException e)
             {
                 Console.WriteLine($"Request error: {e.Message}");
+                PrintTokenDetails(token);
                 return null;
             }
-        }      
+        }   
+
+        private static void PrintTokenDetails(string token)
+        {
+            int tokenLength = token.Length;
+            string lastTenChars = tokenLength > 10 ? token.Substring(tokenLength - 10) : token;
+            Console.WriteLine($"Token length: {tokenLength}, Last 10 characters: {lastTenChars}");
+        }   
     
     }
 }
