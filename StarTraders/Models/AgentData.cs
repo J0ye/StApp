@@ -2,64 +2,49 @@ using System;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace StApp
 {
     public class AgentData
     {
-        public string AccountId { get; set; }
-        public string Symbol { get; set; }
-        public string Headquarters { get; set; }
-        public int Credits { get; set; }
-        public string StartingFaction { get; set; }
-        public int ShipCount { get; set; }
-
-        public void PrintAgentDetails()
-        {
-            Console.WriteLine($"AccountId: {AccountId}");
-            Console.WriteLine($"Symbol: {Symbol}");
-            Console.WriteLine($"Headquarters: {Headquarters}");
-            Console.WriteLine($"Credits: {Credits}");
-            Console.WriteLine($"StartingFaction: {StartingFaction}");
-            Console.WriteLine($"ShipCount: {ShipCount}");
-        } 
+        public Dictionary<string, dynamic> data;
 
         public string GetSystemSymbole()
         {
-            int lastIndex = Headquarters.LastIndexOf('-');
-            string ret = lastIndex >= 0 ? Headquarters.Substring(0, lastIndex) : Headquarters;
-            Console.WriteLine(ret);
-            return ret;
+            // Get the value from data["headquarters"]
+            string headquarters = data["headquarters"];
+            // Find the index of the second '-' sign
+            int firstDashIndex = headquarters.IndexOf('-');
+            int secondDashIndex = headquarters.IndexOf('-', firstDashIndex + 1);
+            // Return substring up to the second '-' sign
+            return secondDashIndex != -1 ? headquarters.Substring(0, secondDashIndex) : headquarters;
         }
 
-        // Add this method to convert JSON string to AgentData object
-        public static AgentData FromJson(string jsonString)
+        public async Task<Dictionary<string, dynamic>> GetSystem(string token)
         {
-            var jsonObject = JsonConvert.DeserializeObject<dynamic>(jsonString);
-            var data = jsonObject.data;
-
-            return new AgentData
+            Console.WriteLine("Fetching system: " + GetSystemSymbole());
+            try
             {
-                AccountId = data.accountId,
-                Symbol = data.symbol,
-                Headquarters = data.headquarters,
-                Credits = data.credits,
-                StartingFaction = data.startingFaction,
-                ShipCount = data.shipCount
-            };
+                return await JsonHelper.MakeRequest(token, $"systems/{GetSystemSymbole()}");
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"Request error: {e.Message}");
+                return null; // Return null if there's an error
+            }
         }
 
         public static async Task<AgentData> GetAgentDetails(string token)
         {
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
-
             try
             {
-                var response = await client.GetAsync("https://api.spacetraders.io/v2/my/agent");
-                response.EnsureSuccessStatusCode();
-                var responseBody = await response.Content.ReadAsStringAsync();
-                return AgentData.FromJson(responseBody);
+                var data = await JsonHelper.MakeRequest(token, "my/agent");
+                return new AgentData
+                {
+                    // Convert JObject to Dictionary<string, dynamic>
+                    data = data["data"].ToObject<Dictionary<string, dynamic>>()
+                };
             }
             catch (HttpRequestException e)
             {
@@ -67,14 +52,14 @@ namespace StApp
                 PrintTokenDetails(token);
                 return null;
             }
-        }   
+        }
 
         private static void PrintTokenDetails(string token)
         {
             int tokenLength = token.Length;
             string lastTenChars = tokenLength > 10 ? token.Substring(tokenLength - 10) : token;
             Console.WriteLine($"Token length: {tokenLength}, Last 10 characters: {lastTenChars}");
-        }   
-    
+        }
+
     }
 }

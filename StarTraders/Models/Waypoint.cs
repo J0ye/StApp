@@ -1,71 +1,93 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace StApp
 {
+    public enum WaypointTrait
+    {
+        UNCHARTED,
+        UNDER_CONSTRUCTION,
+        MARKETPLACE,
+        SHIPYARD,
+        OUTPOST,
+        SCATTERED_SETTLEMENTS,
+        SPRAWLING_CITIES,
+        MEGA_STRUCTURES,
+        PIRATE_BASE,
+        OVERCROWDED,
+        HIGH_TECH,
+        CORRUPT,
+        BUREAUCRATIC,
+        TRADING_HUB,
+        INDUSTRIAL,
+        BLACK_MARKET,
+        RESEARCH_FACILITY,
+        MILITARY_BASE,
+        SURVEILLANCE_OUTPOST,
+        EXPLORATION_OUTPOST,
+        MINERAL_DEPOSITS,
+        COMMON_METAL_DEPOSITS,
+        PRECIOUS_METAL_DEPOSITS,
+        RARE_METAL_DEPOSITS,
+        METHANE_POOLS,
+        ICE_CRYSTALS,
+        EXPLOSIVE_GASES,
+        STRONG_MAGNETOSPHERE,
+        VIBRANT_AURORAS,
+        SALT_FLATS,
+        CANYONS,
+        PERPETUAL_DAYLIGHT,
+        PERPETUAL_OVERCAST,
+        DRY_SEABEDS,
+        MAGMA_SEAS,
+        SUPERVOLCANOES,
+        ASH_CLOUDS,
+        VAST_RUINS,
+        MUTATED_FLORA,
+        TERRAFORMED,
+        EXTREME_TEMPERATURES,
+        EXTREME_PRESSURE,
+        DIVERSE_LIFE,
+        SCARCE_LIFE,
+        FOSSILS,
+        WEAK_GRAVITY,
+        STRONG_GRAVITY,
+        CRUSHING_GRAVITY,
+        TOXIC_ATMOSPHERE,
+        CORROSIVE_ATMOSPHERE,
+        BREATHABLE_ATMOSPHERE,
+        THIN_ATMOSPHERE,
+        JOVIAN,
+        ROCKY,
+        VOLCANIC,
+        FROZEN,
+        SWAMP,
+        BARREN,
+        TEMPERATE,
+        JUNGLE,
+        OCEAN,
+        RADIOACTIVE,
+        MICRO_GRAVITY_ANOMALIES,
+        DEBRIS_CLUSTER,
+        DEEP_CRATERS,
+        SHALLOW_CRATERS,
+        UNSTABLE_COMPOSITION,
+        HOLLOWED_INTERIOR,
+        STRIPPED
+    }
+
     public class Waypoint
     {
-        public string SystemSymbol { get; set; }
-        public string Symbol { get; set; }
-        public string Type { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-        public List<string> Orbitals { get; set; }
-        public List<Trait> Traits { get; set; }
-        public List<string> Modifiers { get; set; }
-        public Chart Chart { get; set; }
-        public Faction Faction { get; set; }
-        public string Orbits { get; set; }
-        public bool IsUnderConstruction { get; set; }
-
-        public static List<Waypoint> FromJson(string json)
+        public static async Task<Dictionary<string, dynamic>> GetWaypoint(string token, string systemSymbol, string waypointSymbol)
         {
-            var waypoints = JsonConvert.DeserializeObject<List<Waypoint>>(json);
-            return waypoints;
+            return await JsonHelper.MakeRequest(token, "systems/" + systemSymbol + "/waypoints/" + waypointSymbol);
         }
 
-        // Test function for FromJsonList
-        public static void TestFromJson()
+        public static async Task<Dictionary<string, dynamic>> GetWaypointsByTrait(string token, string systemSymbol, WaypointTrait trait)
         {
-            string json = "[{\"SystemSymbol\":\"SYS1\",\"Symbol\":\"W1\",\"Type\":\"Type1\",\"X\":1,\"Y\":2,\"Orbitals\":[],\"Traits\":[],\"Modifiers\":[],\"Chart\":null,\"Faction\":null,\"Orbits\":\"Orbit1\",\"IsUnderConstruction\":false}]";
-            var waypoints = FromJson(json);
-            // Assert that the list is not null and has the expected count
-            if (waypoints == null || waypoints.Count != 1)
-            {
-                Console.WriteLine("Test failed: Expected 1 waypoint.");
-            }
-            else
-            {
-                Console.WriteLine("Test passed: 1 waypoint found.");
-            }
-            // Additional assertions can be added here to check properties
+            return await JsonHelper.MakeRequest(token, "systems/" + systemSymbol + "/waypoints?trait=" + trait);
         }
     }
-}
-
-public class Trait
-{
-    public string Symbol { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
-}
-
-public class Chart
-{
-    public string SubmittedBy { get; set; }
-    public DateTime SubmittedOn { get; set; }
-}
-
-public class Faction
-{
-    public string Symbol { get; set; }
-}
-
-public class Meta
-{
-    public int Total { get; set; }
-    public int Page { get; set; }
-    public int Limit { get; set; }
 }

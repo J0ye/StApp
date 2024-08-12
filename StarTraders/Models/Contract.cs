@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Text;
 using System.Net.Http.Headers;
+using System.Collections.Generic;
 
 namespace StApp
 {
@@ -18,6 +19,33 @@ namespace StApp
         public bool Fulfilled { get; set; }
         public DateTime Expiration { get; set; }
         public DateTime DeadlineToAccept { get; set; }
+
+        public static async Task<Dictionary<string, dynamic>> GetContracts(string token)
+        {
+            return await JsonHelper.MakeRequest(token, "my/contracts");
+        }
+
+        public static async Task<bool> AcceptContract(string token, string contractId)
+        {
+            await JsonHelper.MakeRequest(token, "my/contracts/" + contractId + "/accept", HttpMethod.Post);
+
+            Dictionary<string, dynamic> contracts = await GetContracts(token);
+            Dictionary<string, dynamic> contract = contracts["data"][0];
+            foreach (var item in contracts["data"])
+            {
+                if (item["id"] == contractId)
+                {
+                    contract = item;
+
+                    if (contract["accepted"] == true)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
 
         public void PrintToConsole()
         {
@@ -104,11 +132,11 @@ namespace StApp
                 return contract;
             }
             catch (HttpRequestException e)
-            {                
+            {
                 Console.WriteLine("ErrorContext:" + e);
                 return null;
             }
-        }  
+        }
     }
 
     public class Terms

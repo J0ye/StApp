@@ -2,7 +2,8 @@
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Text; // Added this line
+using System.Text;
+using System.Collections.Generic; // Added this line
 
 namespace StApp
 {
@@ -13,27 +14,27 @@ namespace StApp
         static async Task Main(string[] args)
         {
             Program program = new Program();
-            //var registrationResult = await RegisterAgent("Mark37");
+            //var registrationResult = await RegisterAgent("Nomad");
             program.token = GetToken();
             var agent = await AgentData.GetAgentDetails(program.token);
             if (agent != null)
             {
                 Console.WriteLine("Agent data received");
+                foreach (var key in agent.data.Keys)
+                {
+                    Console.WriteLine($"{key}: {agent.data[key]}");
+                }
             }
             else
             {
                 Console.WriteLine("Agent data not received");
             }
-            var location = await FindLocationWithShipyard(program.token, agent.GetSystemSymbole());
-            foreach (var waypoint in Waypoint.FromJson(location))
-            {
-                Console.WriteLine(waypoint.Symbol);
-            }
+            //SystemData system = await agent.GetSystem(program.token);
+            //Dictionary<string, dynamic> contracts= await Contract.GetContracts(program.token);
+            //var result = await Contract.AcceptContract(program.token, (string)contracts["data"][0]["id"]);
+            var waypoints = await Waypoint.GetWaypointsByTrait(program.token, agent.GetSystemSymbole(), WaypointTrait.SHIPYARD);
+            Console.WriteLine("Shipyard at: " + waypoints["data"][0]["symbol"]);
 
-            /*var contract = await Contract.ShowContract(program.token);
-            await contract.AcceptContract(program.token);
-            var location = await Location.GetAgentHeadquarterLocation(agent, program.token);
-            await location.FindWaypointWithShipyard(program.token);*/
         }
 
         private static string GetToken()
