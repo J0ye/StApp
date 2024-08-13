@@ -21,6 +21,14 @@ namespace StApp
             return secondDashIndex != -1 ? headquarters.Substring(0, secondDashIndex) : headquarters;
         }
 
+        public void LogAgentData()
+        {
+            foreach (var key in data.Keys)
+            {
+                Console.WriteLine($"{key}: {data[key]}");
+            }
+        }
+
         public async Task<Dictionary<string, dynamic>> GetSystem(string token)
         {
             Console.WriteLine("Fetching system: " + GetSystemSymbole());

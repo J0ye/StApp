@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -21,15 +22,19 @@ namespace StApp
         }
 
 
-        public static async Task<Dictionary<string, dynamic>> MakeRequest(string token, string requestType)
+        public static async Task<Dictionary<string, dynamic>> MakeRequest(string token, string requestType, bool logRequest = false)
         {
-            return await MakeRequest(token, requestType, HttpMethod.Get);
+            return await MakeRequest(token, requestType, HttpMethod.Get, logRequest);
         }
 
-        public static async Task<Dictionary<string, dynamic>> MakeRequest(string token, string requestType, HttpMethod method, dynamic body = null)
+        public static async Task<Dictionary<string, dynamic>> MakeRequest(string token, string requestType, HttpMethod method, bool logRequest, dynamic body = null)
         {
+            // Create the HTTP request message with the specified method and URL
             var options = new HttpRequestMessage(method, "https://api.spacetraders.io/v2/" + requestType);
-            options.Headers.Add("Authorization", "Bearer " + token);
+            // Add authorization header if token is provided
+            if(!String.IsNullOrEmpty(token)) options.Headers.Add("Authorization", "Bearer " + token);
+
+            // If a body is provided, serialize it to JSON and set it as the content of the request
             if (body != null)
             {
                 options.Content = new StringContent(JsonConvert.SerializeObject(body));
@@ -37,10 +42,23 @@ namespace StApp
 
             using (var client = new HttpClient())
             {
-                var response = await client.SendAsync(options);
-                response.EnsureSuccessStatusCode();
-                var jsonResponse = await response.Content.ReadAsStringAsync();
-                return FromJson(jsonResponse);
+                if(logRequest) Console.WriteLine("Request: " + options.RequestUri);
+                try
+                {
+                    // Send the HTTP request and await the response
+                    var response = await client.SendAsync(options);
+                    // Ensure the response indicates success (status code 2xx)
+                    response.EnsureSuccessStatusCode();
+                    // Read the response content as a string
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    // Deserialize the JSON response into a Dictionary and return it
+                    return FromJson(jsonResponse);
+                }
+                catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    // Handle 404 Not Found
+                    throw new Exception("Resource not found at: " + options.RequestUri, ex);
+                }
             }
         }
 

@@ -20,10 +20,6 @@ namespace StApp
             if (agent != null)
             {
                 Console.WriteLine("Agent data received");
-                foreach (var key in agent.data.Keys)
-                {
-                    Console.WriteLine($"{key}: {agent.data[key]}");
-                }
             }
             else
             {
@@ -32,9 +28,13 @@ namespace StApp
             //SystemData system = await agent.GetSystem(program.token);
             //Dictionary<string, dynamic> contracts= await Contract.GetContracts(program.token);
             //var result = await Contract.AcceptContract(program.token, (string)contracts["data"][0]["id"]);
-            var waypoints = await Waypoint.GetWaypointsByTrait(program.token, agent.GetSystemSymbole(), WaypointTrait.SHIPYARD);
-            Console.WriteLine("Shipyard at: " + waypoints["data"][0]["symbol"]);
-
+            var waypoints = await Waypoint.GetWaypointsByTrait(program.token, agent.GetSystemSymbole(), WaypointTrait.shipyard);
+            string symboleOfShipyard = waypoints[0]["symbol"];
+            Console.WriteLine("Shipyard at: " + symboleOfShipyard);
+            Waypoint shipyard = await Waypoint.GetWaypoint(program.token, agent.GetSystemSymbole(), symboleOfShipyard, true);
+            //Console.WriteLine("First Traits of shipyard: " + shipyard.GetTraits()[0]["symbol"]);
+            var shipyardOptions = await shipyard.GetOptions(program.token, WaypointTrait.shipyard);
+            Console.WriteLine("Ships at shipyard: " + shipyardOptions);
         }
 
         private static string GetToken()
@@ -52,38 +52,8 @@ namespace StApp
             return token;
         }
 
-        private static async Task<string> FindLocationWithShipyard(string token, string systemSymbol) // Updated return type
+        private static async Task<Dictionary<string, dynamic>> RegisterAgent(string callsign)
         {
-            var options = new
-            {
-                headers = new
-                {
-                    Authorization = $"Bearer {token}"
-                }
-            };
-
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.DefaultRequestHeaders.Add("Authorization", options.headers.Authorization);
-
-                    var response = await client.GetAsync($"https://api.spacetraders.io/v2/systems/{systemSymbol}/waypoints?traits=SHIPYARD");
-                    response.EnsureSuccessStatusCode();
-
-                    var responseBody = await response.Content.ReadAsStringAsync();
-                    return responseBody; // Return the response body
-                }
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine($"Request error: {e.Message}");
-                return null; // Return null in case of an error
-            }
-        }
-        private static async Task<string> RegisterAgent(string callsign)
-        {
-            var url = "https://api.spacetraders.io/v2/register";
             var data = new
             {
                 symbol = callsign,
@@ -93,25 +63,13 @@ namespace StApp
             var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "AgentRegisterResult.txt"); // Updated to use My Documents path
             try
             {
-                using (var client = new HttpClient())
+                var responseContent = await JsonHelper.MakeRequest(" ", "register", HttpMethod.Post, false, data);
+                foreach (var key in responseContent.Keys)
                 {
-                    var json = Newtonsoft.Json.JsonConvert.SerializeObject(data);
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    try
-                    {
-                        var response = await client.PostAsync(url, content);
-                        response.EnsureSuccessStatusCode();
-                        var responseContent = await response.Content.ReadAsStringAsync();
-                        await File.WriteAllTextAsync(filePath, responseContent); // Ensure this line is correct
-                        Console.WriteLine("New agent registered with this: " + responseContent);
-                        return responseContent; // Return the response content directly
-                    }
-                    catch (HttpRequestException e)
-                    {
-                        Console.WriteLine($"Request error: {e.Message}");
-                        return null;
-                    }
+                    await File.WriteAllTextAsync(filePath, responseContent[key]);
                 }
+                Console.WriteLine("New agent registered with this: " + responseContent);
+                return responseContent; // Return the response content directly
             }
             catch (IOException e)
             {

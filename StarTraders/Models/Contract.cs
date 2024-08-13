@@ -27,7 +27,7 @@ namespace StApp
 
         public static async Task<bool> AcceptContract(string token, string contractId)
         {
-            await JsonHelper.MakeRequest(token, "my/contracts/" + contractId + "/accept", HttpMethod.Post);
+            await JsonHelper.MakeRequest(token, "my/contracts/" + contractId + "/accept", HttpMethod.Post, false);
 
             Dictionary<string, dynamic> contracts = await GetContracts(token);
             Dictionary<string, dynamic> contract = contracts["data"][0];
