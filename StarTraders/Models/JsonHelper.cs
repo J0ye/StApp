@@ -59,6 +59,11 @@ namespace StApp
                     // Handle 404 Not Found
                     throw new Exception("Resource not found at: " + options.RequestUri, ex);
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Unexpected error: {ex.Message} at {options.RequestUri}");
+                    throw;
+                }
             }
         }
 

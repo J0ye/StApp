@@ -1,64 +1,47 @@
 using System;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.Net.Http;
 using System.Collections.Generic;
 using System.Linq;
-using System.Globalization;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace StApp
 {
     public class SystemData
     {
+        public Dictionary<string, dynamic> data { get; set; }
+
+        public string Symbol => data["symbol"];
+        public string SectorSymbol => data["sectorSymbol"];
+        public string Type => data["type"];
+        public int X => data["x"];
+        public int Y => data["y"];
         /// <summary>
-        /// Gets or sets the unique symbol identifier for the system.
-        /// Example: "X1-PM3"
+        /// Gets the list of waypoints associated with the system.
+        /// Each waypoint is represented as a dictionary of dynamic properties.
         /// </summary>
-        public string Symbol { get; set; }
+        public List<Dictionary<string, dynamic>> Waypoints => data["waypoints"].ToObject<List<Dictionary<string, dynamic>>>();
 
         /// <summary>
-        /// Gets or sets the symbol of the sector this system belongs to.
-        /// Example: "X1"
+        /// Gets the list of factions associated with the system.
+        /// Each faction is represented as a dynamic object.
         /// </summary>
-        public string SectorSymbol { get; set; }
+        public List<dynamic> Factions => data["factions"].ToObject<List<dynamic>>();
 
-        /// <summary>
-        /// Gets or sets the type of celestial body represented by the system.
-        /// Example: "RED_STAR"
-        /// </summary>
-        public string Type { get; set; }
-
-        /// <summary>
-        /// Gets or sets the X coordinate of the system in the galactic map.
-        /// Example: -10723
-        /// </summary>
-        public int X { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Y coordinate of the system in the galactic map.
-        /// Example: -857
-        /// </summary>
-        public int Y { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list of waypoints within the system.
-        /// Each waypoint can represent various celestial objects like planets, moons, or asteroids.
-        /// </summary>
-        public List<Waypoint> Waypoints { get; set; }
-
-        public class Waypoint
+        public async Task<List<Dictionary<string, dynamic>>> GetWaypointsByTrait(string token, WaypointTrait trait)
         {
-            public string Symbol { get; set; }
-            public string Type { get; set; }
-            public int X { get; set; }
-            public int Y { get; set; }
-            public List<Orbital> Orbitals { get; set; }
-            public string Orbits { get; set; } // Optional, for stations and moons
+            var data = await JsonHelper.MakeRequest(token, "systems/" + Symbol + "/waypoints?traits=" + trait, true);
+            return data["data"].ToObject<List<Dictionary<string, dynamic>>>();
         }
 
-        public class Orbital
+        public async Task<Dictionary<string, dynamic>> GetSystem(string symbol, string token)
         {
-            public string Symbol { get; set; }
+            return await JsonHelper.MakeRequest(token, "systems/" + symbol);
+        }
+
+        public async Task<SystemData> GetSystem(string symbol, string token, bool asObject = true)
+        {
+            var systemData = await JsonHelper.MakeRequest(token, "systems/" + symbol);
+            return new SystemData { data = systemData };
         }
     }
 }
