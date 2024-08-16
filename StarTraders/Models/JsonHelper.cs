@@ -21,18 +21,45 @@ namespace StApp
             return rootObject;
         }
 
-
+        /// <summary>
+        /// Makes an HTTP request to the Space Traders API.
+        /// RequestType: The type of request to make (e.g., "my/ships/NOMAD-3/dock", "systems/X1-PM3/waypoints?type=ENGINEERED_ASTEROID"
+        /// </summary>
+        /// <param name="token">The authorization token for the request.</param>
+        /// <param name="requestType">The type of request to make (e.g., "my/ships/NOMAD-3/dock", "systems/X1-PM3/waypoints?type=ENGINEERED_ASTEROID").</param>
+        /// <param name="logRequest">Whether to log the request details.</param>
+        /// <returns>A task that represents the asynchronous operation, containing a dictionary of the response.</returns>
+        /// <example>
+        /// Example usage:
+        /// var result = await JsonHelper.MakeRequest("your_token", "my/ships/NOMAD-3/dock", HttpMethod.Post);
+        /// var waypointsResult = await JsonHelper.MakeRequest("your_token", "systems/X1-PM3/waypoints?type=ENGINEERED_ASTEROID", HttpMethod.Get, true);
+        /// </example>
         public static async Task<Dictionary<string, dynamic>> MakeRequest(string token, string requestType, bool logRequest = false)
         {
             return await MakeRequest(token, requestType, HttpMethod.Get, logRequest);
         }
 
+        /// <summary>
+        /// Makes an HTTP request to the Space Traders API.
+        /// RequestType: The type of request to make (e.g., "my/ships/NOMAD-3/dock", "systems/X1-PM3/waypoints?type=ENGINEERED_ASTEROID"    
+        /// </summary>
+        /// <param name="token">The authorization token for the request.</param>
+        /// <param name="requestType">The type of request to make (e.g., "my/ships/NOMAD-3/dock", "systems/X1-PM3/waypoints?type=ENGINEERED_ASTEROID").</param>
+        /// <param name="method">The HTTP method to use (GET, POST, etc.).</param>
+        /// <param name="logRequest">Whether to log the request details.</param>
+        /// <param name="body">The body of the request, if applicable.</param>
+        /// <returns>A task that represents the asynchronous operation, containing a dictionary of the response.</returns>
+        /// <example>
+        /// Example usage:
+        /// var result = await JsonHelper.MakeRequest("your_token", "my/ships/NOMAD-3/dock", HttpMethod.Post);
+        /// var waypointsResult = await JsonHelper.MakeRequest("your_token", "systems/X1-PM3/waypoints?type=ENGINEERED_ASTEROID", HttpMethod.Get, true);
+        /// </example>
         public static async Task<Dictionary<string, dynamic>> MakeRequest(string token, string requestType, HttpMethod method, bool logRequest, dynamic body = null)
         {
             // Create the HTTP request message with the specified method and URL
             var options = new HttpRequestMessage(method, "https://api.spacetraders.io/v2/" + requestType);
             // Add authorization header if token is provided
-            if(!String.IsNullOrEmpty(token)) options.Headers.Add("Authorization", "Bearer " + token);
+            if (!String.IsNullOrEmpty(token)) options.Headers.Add("Authorization", "Bearer " + token);
 
             // If a body is provided, serialize it to JSON and set it as the content of the request
             if (body != null)
@@ -42,7 +69,7 @@ namespace StApp
 
             using (var client = new HttpClient())
             {
-                if(logRequest) Console.WriteLine("Request: " + options.RequestUri);
+                if (logRequest) Console.WriteLine("Request: " + options.RequestUri);
                 try
                 {
                     // Send the HTTP request and await the response

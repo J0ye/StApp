@@ -3,7 +3,8 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text;
-using System.Collections.Generic; // Added this line
+using System.Collections.Generic;
+using System.Linq;
 
 namespace StApp
 {
@@ -28,7 +29,7 @@ namespace StApp
             //SystemData system = await agent.GetSystem(program.token);
             //Dictionary<string, dynamic> contracts= await Contract.GetContracts(program.token);
             //var result = await Contract.AcceptContract(program.token, (string)contracts["data"][0]["id"]);
-            var waypoints = await Waypoint.GetOptionsForShipType(program.token, agent.GetSystemSymbole(), ShipType.SHIP_MINING_DRONE);
+            /*var waypoints = await Waypoint.GetOptionsForShipType(program.token, agent.GetSystemSymbole(), ShipType.SHIP_MINING_DRONE);
             string symboleOfShipyard = waypoints[0].Symbol;
             Console.WriteLine("Shipyard at: " + symboleOfShipyard);
             Waypoint shipyard = await Waypoint.GetWaypoint(program.token, agent.GetSystemSymbole(), symboleOfShipyard, true);
@@ -36,9 +37,26 @@ namespace StApp
             var shipyardOptions = await shipyard.GetOptions(program.token, WaypointTrait.SHIPYARD);
             foreach (var option in shipyardOptions["data"]["shipTypes"])
             {
-                Console.WriteLine("Ship: " + option);
+                Console.WriteLine("Ship: " + option["type"]);
+            }*/
+
+            var waypoints = await Waypoint.GetWaypointsByTrait(program.token, agent.GetSystemSymbole(), WaypointTrait.MARKETPLACE);
+            foreach (var waypoint in waypoints)
+            {
+                Console.WriteLine("Waypoint: " + waypoint.Symbol);
+                var options = await waypoint.GetOptions(program.token, WaypointTrait.MARKETPLACE); 
+                if (options["data"]["imports"] != null &&
+                    ((IEnumerable<dynamic>)options["data"]["imports"]).Any(import => import["symbol"] == "IRON"))
+                {
+                    Console.WriteLine("Waypoint: " + waypoint.Symbol);
+                }
+                // Check if they sell fuel
+                if (options["data"]["exchange"] != null &&
+                    ((IEnumerable<dynamic>)options["data"]["exchange"]).Any(exchange => exchange["symbol"] == "FUEL"))
+                {
+                    Console.WriteLine($"Waypoint sells fuel: {waypoint.Symbol}");
+                }
             }
-            
         }
 
         private static string GetToken()

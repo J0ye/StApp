@@ -1,6 +1,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace StApp
 {
@@ -22,7 +24,13 @@ namespace StApp
 
     public class Ship
     {
-        public Dictionary<string, dynamic> Data { get; set; }
+        public Dictionary<string, dynamic> data { get; set; }
+        public static async Task<Dictionary<string, dynamic>> DockShip(string shipId, string token)
+        {
+            var requestType = $"my/ships/{shipId}/dock";
+
+            return await JsonHelper.MakeRequest(token, requestType, HttpMethod.Post, true);
+        }
     }
 }
 

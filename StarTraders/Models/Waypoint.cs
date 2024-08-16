@@ -105,11 +105,24 @@ namespace StApp
             }
         }
 
+        /// <summary>
+        /// Asynchronously retrieves options for the waypoint based on the specified trait.
+        /// </summary>
+        /// <param name="token">The authentication token for API access.</param>
+        /// <param name="trait">The trait to check for the waypoint.</param>
+        /// <returns>A dictionary containing the options for the waypoint if the trait is present; otherwise, null.</returns>
         public async Task<Dictionary<string, dynamic>> GetOptions(string token, WaypointTrait trait)
         {
+            // Check if the waypoint has the specified trait
             if (HasTrait(trait))
             {
-                return await JsonHelper.MakeRequest(token, "systems/" + GetSystemSymbol() + "/waypoints/" + GetSymbol() + "/" + trait);
+                // Determine the endpoint based on the trait type
+                string endpoint = trait == WaypointTrait.MARKETPLACE 
+                    ? "market" // Use 'market' endpoint for MARKETPLACE trait
+                    : trait.ToString(); // Use the trait's string representation for other traits
+                
+                // Make a request to the API for the waypoint options
+                return await JsonHelper.MakeRequest(token, $"systems/{GetSystemSymbol()}/waypoints/{GetSymbol()}/{endpoint}");
             }
             Console.WriteLine("Error: Trait " + trait +  " not found in " + GetSymbol());
             return null;
@@ -156,7 +169,7 @@ namespace StApp
 
         public static async Task<List<Waypoint>> GetWaypointsByTrait(string token, string systemSymbol, WaypointTrait trait)
         {
-            var data = await JsonHelper.MakeRequest(token, "systems/" + systemSymbol + "/waypoints?traits=" + trait, true);
+            var data = await JsonHelper.MakeRequest(token, "systems/" + systemSymbol + "/waypoints?traits=" + trait);
             var waypointsData = data["data"].ToObject<List<Dictionary<string, dynamic>>>();
             var waypoints = new List<Waypoint>();
 
