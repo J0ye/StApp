@@ -14,7 +14,7 @@ namespace StApp
         static async Task Main(string[] args)
         {
             Program program = new Program();
-            //var registrationResult = await RegisterAgent("Nomad");
+            //var registrationResult = await RegisterAgent("Sunlit");
             program.token = GetToken();
             var agent = await AgentData.GetAgentDetails(program.token);
             if (agent != null)
@@ -28,13 +28,17 @@ namespace StApp
             //SystemData system = await agent.GetSystem(program.token);
             //Dictionary<string, dynamic> contracts= await Contract.GetContracts(program.token);
             //var result = await Contract.AcceptContract(program.token, (string)contracts["data"][0]["id"]);
-            var waypoints = await Waypoint.GetWaypointsByTrait(program.token, agent.GetSystemSymbole(), WaypointTrait.shipyard);
-            string symboleOfShipyard = waypoints[0]["symbol"];
+            var waypoints = await Waypoint.GetOptionsForShipType(program.token, agent.GetSystemSymbole(), ShipType.SHIP_MINING_DRONE);
+            string symboleOfShipyard = waypoints[0].Symbol;
             Console.WriteLine("Shipyard at: " + symboleOfShipyard);
             Waypoint shipyard = await Waypoint.GetWaypoint(program.token, agent.GetSystemSymbole(), symboleOfShipyard, true);
             //Console.WriteLine("First Traits of shipyard: " + shipyard.GetTraits()[0]["symbol"]);
-            var shipyardOptions = await shipyard.GetOptions(program.token, WaypointTrait.shipyard);
-            Console.WriteLine("Ships at shipyard: " + shipyardOptions);
+            var shipyardOptions = await shipyard.GetOptions(program.token, WaypointTrait.SHIPYARD);
+            foreach (var option in shipyardOptions["data"]["shipTypes"])
+            {
+                Console.WriteLine("Ship: " + option);
+            }
+            
         }
 
         private static string GetToken()
@@ -63,7 +67,7 @@ namespace StApp
             var filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "AgentRegisterResult.txt"); // Updated to use My Documents path
             try
             {
-                var responseContent = await JsonHelper.MakeRequest(" ", "register", HttpMethod.Post, false, data);
+                var responseContent = await JsonHelper.MakeRequest(" ", "register", HttpMethod.Post, true, data);
                 foreach (var key in responseContent.Keys)
                 {
                     await File.WriteAllTextAsync(filePath, responseContent[key]);
